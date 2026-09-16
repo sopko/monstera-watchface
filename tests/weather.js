@@ -1,0 +1,15 @@
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const fs = require('node:fs');
+let events={}, sent=[], requests=[], locationError=false;
+const context={console,Date,Math,JSON,navigator:{geolocation:{getCurrentPosition(ok,fail){locationError?fail():ok({coords:{latitude:40.7128,longitude:-74.006}});}}},Pebble:{addEventListener(n,f){events[n]=f;},sendAppMessage(m){sent.push(m);}},XMLHttpRequest:function(){requests.push(this);this.open=(method,url)=>{this.url=url;};this.send=()=>{};}};
+vm.runInNewContext(fs.readFileSync('src/pkjs/index.js','utf8'),context);
+events.ready(); assert.equal(requests.length,1);
+events.appmessage({payload:{FetchWeather:1}});assert.equal(requests.length,1);
+requests[0].status=200;requests[0].responseText=JSON.stringify({current:{temperature_2m:71.6,weather_code:0}});requests[0].onload();
+assert.equal(sent[0].Temperature,72);assert.ok(requests[0].url.includes('temperature_unit=fahrenheit'));
+events.ready();requests[1].status=200;requests[1].responseText='invalid';requests[1].onload();assert.equal(sent.length,1);
+events.ready();requests[2].ontimeout();events.ready();assert.equal(requests.length,4);
+requests[3].status=503;requests[3].onload();assert.equal(sent.length,1);
+locationError=true;events.ready();locationError=false;events.ready();assert.equal(requests.length,5);
+console.log('Weather: success, duplicate suppression, malformed response, timeout recovery, HTTP failure, and location recovery passed.');

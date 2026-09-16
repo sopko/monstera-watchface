@@ -1,0 +1,54 @@
+{
+  "name": "monstera-time-2",
+  "author": "Chris Sopko",
+  "version": "1.3.0",
+  "private": true,
+  "keywords": [
+    "pebble-app",
+    "watchface"
+  ],
+  "pebble": {
+    "displayName": "Monstera",
+    "uuid": "bd3e40f8-5d29-4be9-aed9-6676c14ca1af",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "capabilities": [
+      "location",
+      "health"
+    ],
+    "messageKeys": [
+      "Temperature",
+      "WeatherCode",
+      "WeatherTime",
+      "FetchWeather"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "bitmap",
+          "name": "BACKGROUND",
+          "file": "images/background.png",
+          "memoryFormat": "8Bit"
+        },
+        {
+          "type": "font",
+          "name": "METRIC_16",
+          "file": "fonts/Silkscreen-Regular.ttf",
+          "characterRegex": "[ A-Z0-9,:°%+\\-]"
+        },
+        {
+          "type": "font",
+          "name": "BATTERY_12",
+          "file": "fonts/Silkscreen-Regular.ttf",
+          "characterRegex": "[0-9%]"
+        }
+      ]
+    }
+  }
+}

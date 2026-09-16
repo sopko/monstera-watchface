@@ -1,0 +1,41 @@
+# Monstera — Pebble Time 2
+
+A botanical watchface for the 200 × 228 Pebble Time 2 display, pairing bold pixel numerals with forest-green monstera leaves and a muted gray-ivory background.
+
+![Monstera emulator preview](previews/monstera.png)
+
+## Install
+
+Download [Monstera Watchface.pbw](Monstera%20Watchface.pbw) and sideload it through the Pebble mobile app, or install using the phone IP shown by the app:
+
+```sh
+pebble install --phone YOUR_PHONE_IP "Monstera Watchface.pbw"
+```
+
+## Features
+
+- Live time using the watch's 12/24-hour preference, weekday, and date.
+- Battery gauge, percentage, and charging indicator.
+- Daily steps and the latest available heart-rate reading from Pebble Health. Missing readings appear as dashes; heart rate requires supported hardware and available Health data.
+- Current Fahrenheit temperature and sun/cloud/rain icon, supplied by [Open-Meteo](https://open-meteo.com/). Weather refreshes every 30 minutes through the phone, requires location permission and internet, and disappears after two hours without a successful update.
+- Clock, artwork, battery, and available health readings work offline. No API key, npm dependencies, or settings page.
+
+## Build and validate
+
+```sh
+pebble build
+pebble install --emulator emery
+node tests/weather.js
+```
+
+Build output: `build/Monstera Watchface.pbw`. The root PBW is the current packaged version, 1.3.0.
+
+Built with Pebble SDK 4.9.148. Installed and visually checked in the Time 2 emulator. Weather tests cover valid and malformed responses, duplicate suppression, HTTP errors, timeouts, and location failure recovery. Prior emulator checks covered 12/24-hour layouts, full/low battery, charging, live weather, and unavailable health readings. Physical-device heart-rate sensing has not been tested.
+
+## Design and attribution
+
+The original plant artwork was generated with the built-in imagegen tool from the supplied visual reference. Its source and prompt are retained in `artwork/monstera-source.png` and `artwork/prompt.txt`. The alternative smaller composition is retained separately as a design iteration.
+
+`resources/images/background.png` is the production asset. The watchface displays it at 90% size, anchored bottom-right, with native nearest-neighbor scaling applied once at startup. A fine blend of native light gray, pale yellow, and white approximates gray-ivory on the display's 64-color palette. Its nominal average is approximately #D5D5BF; appearance varies with the screen and lighting.
+
+Clock numerals are original 9 × 16 pixel glyphs rendered at 2× scale. Data labels use [Silkscreen](https://github.com/googlefonts/silkscreen), by Jason Kottke / The Silkscreen Project Authors, under the SIL Open Font License. The license is included in `resources/fonts/OFL-Silkscreen.txt`.
