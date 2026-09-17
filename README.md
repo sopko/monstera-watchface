@@ -39,3 +39,7 @@ The original plant artwork was generated with the built-in imagegen tool from th
 `resources/images/background.png` is the production asset. The watchface displays it at 90% size, anchored bottom-right, with native nearest-neighbor scaling applied once at startup. A fine blend of native light gray, pale yellow, and white approximates gray-ivory on the display's 64-color palette. Its nominal average is approximately #D5D5BF; appearance varies with the screen and lighting.
 
 Clock numerals are original 9 × 16 pixel glyphs rendered at 2× scale. Data labels use [Silkscreen](https://github.com/googlefonts/silkscreen), by Jason Kottke / The Silkscreen Project Authors, under the SIL Open Font License. The license is included in `resources/fonts/OFL-Silkscreen.txt`.
+
+## App store resources
+
+The [store upload kit](Monstera%20Store%20Kit.zip) contains the release binary, paste-ready description, listing details, a native screenshot, 720 × 320 marketing banner, and 144 px / 80 px icons. See [upload instructions](store-assets/README.md). Promotional artwork masters and imagegen prompts are in `artwork/store/`. The store listing has not been published.

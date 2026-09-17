@@ -1,0 +1,19 @@
+{
+  "title": "Monstera",
+  "type": "watchface",
+  "version": "1.3.0",
+  "platform": "emery",
+  "device": "Pebble Time 2",
+  "language": "en",
+  "shortDescription": "Bold pixel time, lush monstera leaves, and a warm ivory backdrop.",
+  "website": "https://github.com/sopko/monstera-watchface",
+  "sourceCode": "https://github.com/sopko/monstera-watchface",
+  "supportUrl": "https://github.com/sopko/monstera-watchface/issues",
+  "supportEmail": null,
+  "descriptionFile": "description.txt",
+  "releaseFile": "Monstera Watchface.pbw",
+  "screenshot": "monstera-screenshot-emery.png",
+  "marketingBanner": "monstera-banner-720x320.png",
+  "icon144": "monstera-icon-144.png",
+  "icon80": "monstera-icon-80.png"
+}
