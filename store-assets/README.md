@@ -1,6 +1,6 @@
 # Monstera — store upload kit
 
-Prepared for version 1.3.0, Pebble Time 2 / Emery, English.
+Prepared for version 1.4.0, Pebble Time 2 / Emery, English.
 
 | File | Purpose |
 | --- | --- |

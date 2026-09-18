@@ -1,7 +1,7 @@
 {
   "name": "monstera-time-2",
   "author": "Chris Sopko",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "keywords": [
     "pebble-app",
@@ -20,14 +20,20 @@
     },
     "capabilities": [
       "location",
-      "health"
+      "health",
+      "configurable"
     ],
-    "messageKeys": [
-      "Temperature",
-      "WeatherCode",
-      "WeatherTime",
-      "FetchWeather"
-    ],
+    "messageKeys": {
+      "Temperature": 10000,
+      "WeatherCode": 10001,
+      "WeatherTime": 10002,
+      "FetchWeather": 10003,
+      "Celsius": 10004,
+      "ShowSteps": 10005,
+      "ShowWeather": 10006,
+      "ShowBattery": 10007,
+      "ShowHeart": 10008
+    },
     "resources": {
       "media": [
         {
@@ -50,5 +56,8 @@
         }
       ]
     }
+  },
+  "dependencies": {
+    "@rebble/clay": "^1.1.0"
   }
 }

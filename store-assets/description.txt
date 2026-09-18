@@ -6,8 +6,11 @@ FEATURES
 • Large digital clock with your preferred 12- or 24-hour format
 • Weekday and date
 • Battery gauge and percentage
-• Current temperature in Fahrenheit with weather icons
+• Temperature in Fahrenheit or Celsius with weather icons
 • Daily steps and the latest available heart-rate reading
+
+SETTINGS
+Choose °F or °C and independently show or hide weather, steps, battery, and heart rate in the Pebble app. Your preferences are saved.
 
 Weather is provided by Open-Meteo and updates through your phone every 30 minutes. It requires location permission and an internet connection. No API key or separate companion app is needed.
 

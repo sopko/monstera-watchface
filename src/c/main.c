@@ -15,6 +15,8 @@ static int s_battery, s_temp, s_code;
 static time_t s_weather_time;
 static int32_t s_steps=-1, s_heart=-1;
 static bool s_charging;
+static bool s_celsius=false, s_show_steps=true, s_show_weather=true, s_show_battery=true, s_show_heart=true;
+enum { P_CELSIUS=10, P_STEPS, P_WEATHER, P_BATTERY, P_HEART };
 
 // The display has no solid ivory: mix native white, light gray and pale yellow.
 // Apply once at load so the soft paper tone costs nothing on minute redraws.
@@ -63,9 +65,9 @@ static void health_refresh(void) {
  s_steps=-1; s_heart=-1;
 #if defined(PBL_HEALTH)
  time_t now=time(NULL);
- if(health_service_metric_accessible(HealthMetricStepCount,time_start_of_today(),now)&HealthServiceAccessibilityMaskAvailable)
+ if(s_show_steps && (health_service_metric_accessible(HealthMetricStepCount,time_start_of_today(),now)&HealthServiceAccessibilityMaskAvailable))
   s_steps=health_service_sum_today(HealthMetricStepCount);
- if(health_service_metric_accessible(HealthMetricHeartRateBPM,now-600,now)&HealthServiceAccessibilityMaskAvailable) {
+ if(s_show_heart && (health_service_metric_accessible(HealthMetricHeartRateBPM,now-600,now)&HealthServiceAccessibilityMaskAvailable)) {
   int32_t hr=health_service_peek_current_value(HealthMetricHeartRateBPM);
   if(hr>0) s_heart=hr;
  }
@@ -112,16 +114,25 @@ static void draw(Layer *layer,GContext *ctx) {
  clock_text(ctx,buf,10,26);
  graphics_context_set_stroke_color(ctx,GColorBlack);
  graphics_context_set_fill_color(ctx,GColorBlack);
+ if(s_show_battery) {
  graphics_draw_rect(ctx,GRect(173,7,19,10));
  graphics_fill_rect(ctx,GRect(192,10,2,4),0,GCornerNone);
  int bw=15*s_battery/100;
  if(bw) graphics_fill_rect(ctx,GRect(175,9,bw,6),0,GCornerNone);
- snprintf(buf,sizeof(buf),"%d%%",s_battery);label(ctx,buf,166,16,34,s_battery_font);
- if(s_charging) pixel_text(ctx,"+",165,9,1,1);
+ snprintf(buf,sizeof(buf),"%d%%",s_battery);
+ graphics_context_set_text_color(ctx,GColorBlack);
+ graphics_draw_text(ctx,buf,s_battery_font,GRect(132,3,37,16),GTextOverflowModeTrailingEllipsis,GTextAlignmentRight,NULL);
+ if(s_charging) pixel_text(ctx,"+",179,20,1,1);
+ }
+ if(s_show_weather) {
  bool valid=s_weather_time>0 && now>=s_weather_time && now-s_weather_time<7200;
  weather_icon(ctx,valid);
- if(valid) snprintf(buf,sizeof(buf),"%d°",s_temp); else strcpy(buf,"--°");
+ int temperature=s_temp;
+ if(s_celsius) { int n=(s_temp-32)*5; temperature=(n+(n>=0?4:-4))/9; }
+ if(valid) snprintf(buf,sizeof(buf),"%d°",temperature); else strcpy(buf,"--°");
  label(ctx,buf,33,60,60,s_metric_font);
+ }
+ if(s_show_steps) {
  static const uint16_t feet[]={0x018,0x03c,0x03c,0x03c,0x03c,0x218,0x700,0x780,0x780,0x780,0x780,0x300};
  icon(ctx,11,84,feet,12,12);
  if(s_steps<0) strcpy(buf,"--");
@@ -129,25 +140,38 @@ static void draw(Layer *layer,GContext *ctx) {
  else if(s_steps>=1000) snprintf(buf,sizeof(buf),"%ld,%03ld",(long)(s_steps/1000),(long)(s_steps%1000));
  else snprintf(buf,sizeof(buf),"%ld",(long)s_steps);
  label(ctx,buf,33,78,62,s_metric_font);
+ }
+ if(s_show_heart) {
  static const uint16_t heart[]={0x318,0x7bc,0x7fc,0x7fc,0x3f8,0x1f0,0x0e0,0x040};
  icon(ctx,10,103,heart,8,12);
  if(s_heart>0) snprintf(buf,sizeof(buf),"%ld",(long)s_heart); else strcpy(buf,"--");
  label(ctx,buf,33,95,35,s_metric_font);
+ }
 }
 static void request_weather(void) {
- if(!connection_service_peek_pebble_app_connection()) return;
+ if(!s_show_weather || !connection_service_peek_pebble_app_connection()) return;
  DictionaryIterator *iter;
  if(app_message_outbox_begin(&iter)==APP_MSG_OK) {
   dict_write_uint8(iter,MESSAGE_KEY_FetchWeather,1);app_message_outbox_send();
  }
 }
+static void read_setting(DictionaryIterator *iter,uint32_t key,int persist_key,bool *value) {
+ Tuple *t=dict_find(iter,key);
+ if(t && (t->type==TUPLE_INT || t->type==TUPLE_UINT)) { *value=t->value->int32!=0;persist_write_bool(persist_key,*value); }
+}
 static void inbox(DictionaryIterator *iter,void *context) {
+ read_setting(iter,MESSAGE_KEY_Celsius,P_CELSIUS,&s_celsius);
+ read_setting(iter,MESSAGE_KEY_ShowSteps,P_STEPS,&s_show_steps);
+ read_setting(iter,MESSAGE_KEY_ShowWeather,P_WEATHER,&s_show_weather);
+ read_setting(iter,MESSAGE_KEY_ShowBattery,P_BATTERY,&s_show_battery);
+ read_setting(iter,MESSAGE_KEY_ShowHeart,P_HEART,&s_show_heart);
  Tuple *temp=dict_find(iter,MESSAGE_KEY_Temperature), *code=dict_find(iter,MESSAGE_KEY_WeatherCode), *stamp=dict_find(iter,MESSAGE_KEY_WeatherTime);
  if(temp&&code&&stamp) {
-  s_temp=temp->value->int32;s_code=code->value->int32;s_weather_time=stamp->value->int32;
+  s_temp=temp->value->int32;s_code=code->value->int32;s_weather_time=time(NULL); // Age cached data using the watch clock, not the phone timezone.
   persist_write_int(1,s_temp);persist_write_int(2,s_code);persist_write_int(3,s_weather_time);
-  layer_mark_dirty(s_canvas);
  }
+ health_refresh();
+ layer_mark_dirty(s_canvas);
 }
 static void tick(struct tm *t,TimeUnits units) {
  health_refresh(); layer_mark_dirty(s_canvas);
@@ -162,6 +186,11 @@ static void connection(bool connected) {if(connected) request_weather();}
 static void health(HealthEventType event,void *context) {health_refresh();if(s_canvas) layer_mark_dirty(s_canvas);}
 #endif
 static void init(void) {
+ if(persist_exists(P_CELSIUS)) s_celsius=persist_read_bool(P_CELSIUS);
+ if(persist_exists(P_STEPS)) s_show_steps=persist_read_bool(P_STEPS);
+ if(persist_exists(P_WEATHER)) s_show_weather=persist_read_bool(P_WEATHER);
+ if(persist_exists(P_BATTERY)) s_show_battery=persist_read_bool(P_BATTERY);
+ if(persist_exists(P_HEART)) s_show_heart=persist_read_bool(P_HEART);
  s_temp=persist_read_int(1);s_code=persist_read_int(2);s_weather_time=persist_read_int(3);
  s_battery_font=fonts_load_custom_font(resource_get_handle(RESOURCE_ID_BATTERY_12));
  s_metric_font=fonts_load_custom_font(resource_get_handle(RESOURCE_ID_METRIC_16));
@@ -171,7 +200,7 @@ static void init(void) {
  s_canvas=layer_create(GRect(0,0,200,228));layer_set_update_proc(s_canvas,draw);
  layer_add_child(window_get_root_layer(s_window),s_canvas);window_stack_push(s_window,true);
  health_refresh();battery(battery_state_service_peek());
- app_message_register_inbox_received(inbox);app_message_open(128,64);
+ app_message_register_inbox_received(inbox);app_message_open(256,64);
  tick_timer_service_subscribe(MINUTE_UNIT,tick);battery_state_service_subscribe(battery);
  connection_service_subscribe((ConnectionHandlers){.pebble_app_connection_handler=connection});
 #if defined(PBL_HEALTH)
